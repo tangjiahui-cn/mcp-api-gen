@@ -669,15 +669,19 @@ server.tool(
       content: [
         {
           type: "text",
-          text: `生成文件位置: ${outputPath}`,
+          text: `[MCP执行完成]
+
+前端 API 文件已生成，请勿重复生成代码。
+
+生成文件位置：
+${outputPath}
+
+接口统计：
+- 总计生成 API 数量：${totalCount}
+- 已生成类型接口数：${typedCount}
+- 缺失 schema 接口数：${missingCount} (${percent}%)`,
         },
-        {
-          type: "text",
-          text: `总计生成API数量: ${totalCount}
-已生成类型接口数: ${typedCount}
-缺失 schema 接口数: ${missingCount} (${percent}%)`,
-        },
-      ],
+      ]
     };
   },
 );

@@ -21,11 +21,11 @@
 
 一句话提问（默认生成到 ./api.ts）：
 
-> 调用 MCP 根据 http://localhost:3000/api-docs.json 生成前端API文件，不要自行请求或生成代码。
+> 根据 http://localhost:3000/api-docs.json 生成前端API文件
 
 一句话提问（指定生成目标位置）：
 
-> 调用 MCP 根据 http://localhost:3000/api-docs.json 生成前端API文件到 ./service/api.ts，不要自行请求或生成代码。
+> 根据 http://localhost:3000/api-docs.json 生成前端API文件到 ./service/api.ts
 
 ## 本地调试
 

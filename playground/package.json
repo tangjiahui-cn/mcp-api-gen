@@ -1,0 +1,13 @@
+{
+  "name": "playground",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "node index.js && npx serve -p 10008 ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "测试接口自动生成。"
+}

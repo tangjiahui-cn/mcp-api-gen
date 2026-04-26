@@ -590,25 +590,28 @@ function generateCode(spec: OpenAPISpec) {
 /**
  * MCP 工具：生成 API 文件
  */
-server.tool(
+server.registerTool(
   "createAPI",
   {
-    openapiUrl: z
-      .string()
-      .url()
-      .optional()
-      .describe(
-        "Swagger/OpenAPI 文档地址（优先，其次使用环境变量 OPENAPI_URL）",
-      ),
-    projectRoot: z
-      .string()
-      .optional()
-      .describe("当前项目根目录（必须传入，通常为当前工作区路径）"),
-    output: z
-      .string()
-      .describe(
-        '生成文件路径（必须传入）。例如：./api.ts 或 ./src/api.ts；以 / 开头表示绝对路径；如不指定请传空字符串 ""',
-      ),
+    description: "根据 OpenAPI/Swagger 地址自动生成前端 API 调用代码",
+    inputSchema: {
+      openapiUrl: z
+        .string()
+        .url()
+        .optional()
+        .describe(
+          "Swagger/OpenAPI 文档地址（优先，其次使用环境变量 OPENAPI_URL）",
+        ),
+      projectRoot: z
+        .string()
+        .optional()
+        .describe("当前项目根目录（必须传入，通常为当前工作区路径）"),
+      output: z
+        .string()
+        .describe(
+          '生成文件路径（必须传入）。例如：./api.ts 或 ./src/api.ts；以 / 开头表示绝对路径；如不指定请传空字符串 ""',
+        ),
+    },
   },
   async ({ openapiUrl, projectRoot, output }) => {
     const url = openapiUrl?.trim() || process.env.OPENAPI_URL?.trim();
@@ -681,7 +684,7 @@ ${outputPath}
 - 已生成类型接口数：${typedCount}
 - 缺失 schema 接口数：${missingCount} (${percent}%)`,
         },
-      ]
+      ],
     };
   },
 );

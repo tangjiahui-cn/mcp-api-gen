@@ -4,10 +4,13 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "node index.js && npx serve -p 10008 ."
+    "dev": "node index.js && serve -p 10008 ."
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "测试接口自动生成。"
+  "description": "测试接口自动生成。",
+  "devDependencies": {
+    "serve": "^14.2.6"
+  }
 }

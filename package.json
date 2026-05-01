@@ -1,15 +1,17 @@
 {
   "name": "mcp-api-gen",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "private": false,
   "main": "./dist/index.js",
   "module": "./dist/index.js",
-  "description": "基于 MCP 打通内网 OpenAPI，在 AI 编辑器中一分钟生成 200+ TypeScript API。",
+  "description": "基于 MCP 打通内网 OpenAPI，在 AI 编辑器中一分钟生成 1000+ TypeScript API。",
   "scripts": {
-    "dev": "tsc -p tsconfig.json --watch",
-    "build": "tsc -p tsconfig.json && chmod +x dist/index.js",
-    "debug": "npx @modelcontextprotocol/inspector node ./dist/index.js"
+    "dev": "cross-env mode=development tsx build.ts --watch",
+    "build": "cross-env mode=production tsx build.ts && chmod +x dist/index.js",
+    "build:full": "cross-env mode=development tsx build.ts && chmod +x dist/index.js",
+    "debug": "tsx watch debug.ts",
+    "debug:mcp": "npx @modelcontextprotocol/inspector node ./dist/index.js"
   },
   "bin": {
     "mcp-api-gen": "./dist/index.js"
@@ -43,12 +45,21 @@
     "trae"
   ],
   "dependencies": {
+    "@babel/generator": "7",
+    "@babel/parser": "7",
+    "@babel/traverse": "7",
+    "@babel/types": "7",
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "zod": "^3.23.8",
-    "prettier": "^3.8.3"
+    "prettier": "^3.8.3",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/babel__generator": "^7.27.0",
+    "@types/babel__traverse": "^7.28.0",
     "@types/node": "^20.19.39",
+    "cross-env": "^10.1.0",
+    "esbuild": "^0.28.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.2"
   }
 }

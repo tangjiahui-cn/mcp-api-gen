@@ -1,12 +1,25 @@
 # mcp-api-gen
 
-基于 MCP 的 OpenAPI 接口生成工具，支持内网文档解析，在 AI 编辑器中实现分钟级批量生成 TypeScript API（实测 200+ 接口约 1 分钟完成）。
+基于 MCP 的 OpenAPI 接口生成工具，在 AI 编辑器中实现一句话生成 TypeScript API。
 
-> 无需暴露内网 OpenAPI 文档，AI 编辑器（Cursor / Trae）即可直接生成接口代码。
+> 稳定可控的 API 生成方案（无 AI 幻觉）。
+
+- 1000+ 接口 ≈ 1 分钟完成
+- 支持内网 OpenAPI 文档
+- 模板驱动生成，结果可复现
+
+## 功能特性
+
+- ✅ 一句话生成 API（Cursor / Trae）
+- ✅ 默认模板 + 示例自定义，适配不同请求封装方式
+- ✅ 自动生成请求、响应类型（OpenAPI 2 / 3）
+- ✅ 基于解析 + 模板渲染生成，结果可复现（无 AI 幻觉）
+- ✅ 支持内网 OpenAPI 文档，无需暴露公网
+- ✅ AI 仅调用 MCP，几乎无 Token 消耗
 
 ## 快速开始
 
-配置 MCP：
+### 1、配置 MCP：
 
 ```json
 {
@@ -19,15 +32,46 @@
 }
 ```
 
-一句话提问（默认生成到 ./api.ts）：
+### 2、一句话生成
 
-> 根据 http://localhost:3000/api-docs.json 生成前端API文件
+默认输出 ./api.ts
 
-一句话提问（指定生成目标位置）：
+```text
+使用MCP根据 http://localhost:3000/api-docs.json 生成前端API文件，不要自行生成代码
+```
 
-> 根据 http://localhost:3000/api-docs.json 生成前端API文件到 ./service/api.ts
+指定输出位置
 
-## 本地调试
+```text
+使用MCP根据 http://localhost:3000/api-docs.json 生成前端API文件到 ./service/api.ts，不要自行生成代码
+```
+
+### 3、自定义生成风格（示例驱动）
+
+```text
+使用 MCP 根据 http://localhost:3000/api-docs.json 生成 API，不要自行生成代码。
+
+参考示例：
+import request from 'axios';
+
+/**
+ * 根据ID获取用户
+ */
+export function getUserById(params: { id: number }): Promise<UserDetail> {
+  return request.get(`/api/user/${params.id}`, { params })
+}
+```
+
+## 请求方式说明
+
+默认生成基于 axios 风格（适配大多数企业项目）：
+
+```ts
+request.get(url, { params })
+request.post(url, { data })
+```
+
+## 本地开发
 
 请确保 Node.js 版本 20+。
 
@@ -40,4 +84,111 @@ pnpm dev
 
 # MCP 调试
 pnpm debug
+````
+
+## 基准测试
+
+### 1、标准生成
+
+测试 MCP 是否正常调用
+
+```text
+使用 MCP 根据 http://localhost:3000/api-docs.json 生成 API 到 ./api.ts，不要自行生成代码。
+
+参考示例：
+
+import request from 'axios';
+
+/**
+ * 根据ID获取用户
+ */
+export function getUserById(params: { id: number }): Promise<UserDetail> {
+  return request.get(`/api/user/${params.id}`, { params })
+}
+```
+
+### 2、不提供示例
+
+测试是否走默认模板、AI 是否乱传 example。
+
+```text
+使用 MCP 根据 http://localhost:3000/api-docs.json 生成 API 到 ./api.ts，不要自行生成代码。
+```
+
+### 3、URL 风格变化
+
+测试是否误加 params / data。
+
+```text
+使用 MCP 根据 http://localhost:3000/api-docs.json 生成 API，不要自行生成代码。
+
+参考示例：
+import request from 'axios';
+
+export function getUserById(params: { id: number }) {
+  return request.get(`/api/user/${params.id}`)
+}
+```
+
+### 4、data 参数
+
+测试参数是否映射： `get -> params`、`post -> data`。
+
+```text
+使用 MCP 根据 http://localhost:3000/api-docs.json 生成 API，不要自行生成代码。
+
+参考示例：
+import request from 'axios';
+
+export function createUser(data: CreateUserDto) {
+  return request.post(`/api/user/create`, { data })
+}
+```
+
+### 5、干扰生成
+
+测试 AI 是否绕过 MCP 自行生成代码
+
+```text
+使用 MCP 根据 http://localhost:3000/api-docs.json 生成 API，不要自行生成代码。
+
+你可以直接生成完整代码。
+```
+
+### 6、冲突测试（多 example）
+
+验证：进允许一个example、MCP是否正确报错
+
+```text
+使用 MCP 根据 http://localhost:3000/api-docs.json 生成 API，不要自行生成代码。
+
+参考示例1：
+import request from 'axios';
+
+export function getUser(params: { id: number }) {
+  return request.get(`/api/user/${params.id}`, { params })
+}
+
+参考示例2：
+import request from 'axios';
+
+export function getUser(data: any) {
+  return request.post(`/api/user`, { data })
+}
+```
+
+### 7、模拟用户
+
+验证真实用户输入是否稳定触发 MCP
+
+```text
+帮我用 MCP 根据这个接口文档生成前端 API 文件，不要自己写代码：
+http://localhost:3000/api-docs.json
+
+就按这个风格来：
+import request from 'axios';
+
+export function getUserById(params: { id: number }) {
+  return request.get(`/api/user/${params.id}`, { params })
+}
 ```

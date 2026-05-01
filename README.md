@@ -1,5 +1,11 @@
 # mcp-api-gen
 
+![npm](https://img.shields.io/npm/v/mcp-api-gen)
+![license](https://img.shields.io/npm/l/mcp-api-gen)
+![node](https://img.shields.io/badge/node-%3E%3D20.0.0-green)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue)
+![MCP](https://img.shields.io/badge/MCP-1.29.0-purple)
+
 基于 MCP 的 OpenAPI 接口生成工具，在 AI 编辑器中生成前端 API。
 
 > 一句话生成 API，1000+ 接口 1 分钟完成，支持内网，稳定可控（无 AI 幻觉）。
@@ -58,13 +64,13 @@ export function getUserById(params: { id: number }): Promise<UserDetail> {
 
 ## 方案对比
 
-| 方案              | 是否可控 | 是否支持内网 | 是否批量生成 | 生成质量 |
-|-----------------| -------- | ------------ | ------------ | -------- |
-| 手写 API          | ✅       | ✅           | ❌           | 高       |
-| Swagger Codegen | 一般     | 一般           | ✅           | 一般     |
+| 方案                | 是否可控 | 是否支持内网 | 是否批量生成 | 生成质量 |
+| ------------------- | -------- | ------------ | ------------ | -------- |
+| 手写 API            | ✅       | ✅           | ❌           | 高       |
+| Swagger Codegen     | 一般     | 一般         | ✅           | 一般     |
 | AI 直接生成         | ❌       | ❌           | ❌           | 不稳定   |
-| MCP Server 生成工具 | 一般 | 一般 | ✅ | 高 |
-| **mcp-api-gen** | ✅       | ✅           | ✅           | 稳定可控 |
+| MCP Server 生成工具 | 一般     | 一般         | ✅           | 高       |
+| **mcp-api-gen**     | ✅       | ✅           | ✅           | 稳定可控 |
 
 MCP Server 生成工具主要面向 “AI 调用接口”， 而 `mcp-api-gen` 面向 “开发者生成 API 文件”。
 
@@ -87,7 +93,6 @@ MCP Server 生成工具主要面向 “AI 调用接口”， 而 `mcp-api-gen` �
 request.get(url, { params });
 request.post(url, { data });
 ```
-
 
 ## 本地开发
 

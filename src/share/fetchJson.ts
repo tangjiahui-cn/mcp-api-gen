@@ -5,14 +5,15 @@ import { createError } from "@/share";
  */
 export async function fetchJson<T = unknown>(
   url: string,
-  options?: { timeout?: number },
+  options?: { timeout?: number; signal?: AbortSignal },
 ): Promise<T> {
   const { timeout = 10000 } = options || {};
-  const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
+  const controller = new AbortController();
+  const signal = options?.signal ?? controller.signal;
 
   try {
-    const res = await fetch(url, { signal: controller.signal });
+    const res = await fetch(url, { signal });
 
     if (!res.ok) {
       throw createError(await buildHttpError(res), "fetchJson");

@@ -3,7 +3,12 @@ import fs from "fs";
 import path from "path";
 import { type ApiRenderType, createApiRender } from "./renderer";
 import type { ApiInfo, OpenAPISpec, OpenApiOperationObject } from "@/schema";
-import { toCamelCase, fetchJson, formatCode, createError } from "@/share";
+import {
+  toCamelCase,
+  formatCode,
+  createError,
+  fetchOpenAPIJson,
+} from "@/share";
 import {
   getResponseSchema,
   toTsType,
@@ -450,7 +455,7 @@ export async function createApiService(input: CreateApiInput) {
   const render = createApiRender(template);
 
   // 获取 openapi 接口信息
-  const spec = await fetchJson<OpenAPISpec>(openapiUrl);
+  const spec = await fetchOpenAPIJson(openapiUrl);
 
   // 生成 api 代码
   const { code, stats } = generateApiCode(spec, render);

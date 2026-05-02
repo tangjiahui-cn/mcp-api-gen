@@ -69,7 +69,7 @@ export function getUserById(params: { id: number }): Promise<UserDetail> {
 | MCP Server 生成工具 | 一般     | 一般         | ✅           | 高       |
 | **mcp-api-gen**     | ✅       | ✅           | ✅           | 稳定可控 |
 
-MCP Server 工具通常用来提供接口能力，需要多次调用完成生成。而 mcp-api-gen 在 AI 编辑器中可直接生成 API 文件，一次调用生成。
+MCP Server 工具通常用来提供接口能力，需要多次调用完成生成。而 mcp-api-gen 可在 AI 编辑器中直接生成 API 文件，一次调用即可生成。
 
 ## 功能特性
 

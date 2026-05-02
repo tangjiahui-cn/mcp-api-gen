@@ -13,36 +13,18 @@ import {
   getResponseSchema,
   toTsType,
   getRequestBodySchema,
-  exampleParser,
-} from "./parse";
+  tsExampleParser,
+} from "./parser";
 // @ts-ignore
 import { CallToolResultSchema } from "@modelcontextprotocol/sdk/dist/esm/types";
 import type { CreateApiInput } from "./schema";
-import {
-  normalizeCreateApiInput,
-  normalizeMethod,
-  normalizeExampleByAst,
-} from "./normalize";
+import { normalizeCreateApiInput, normalizeMethod } from "./normalize";
 import { HttpMethod } from "@/types";
 
 /** 判断是否为 {} */
 function isEmptyObjectType(type: string): boolean {
   return !!type && type.replace(/\s/g, "") === "{}";
 }
-
-const DEFAULT_IMPORTS = 'import axios from "axios"';
-const DEFAULT_TEMPLATE = `
-/**
- * {{summary}}
- */
-export function {{name}}(
-  {{paramsName}}: {{requestType}}
-): Promise<{{responseType}}> {
-  return axios.{{method}}(\`{{url}}\`, {
-    {{paramsType}}: {{paramsName}}
-  });
-}
-`;
 
 /**
  * 根据接口路径生成函数名（驼峰命名、忽略 /api）
@@ -423,21 +405,7 @@ function generateApiPage(options: {
 }
 
 /**
- * 创建 API 生成模板
- * @param example api 请求实例
- */
-function createTemplate(example?: string): string {
-  if (example && example?.trim()) {
-    return normalizeExampleByAst(example);
-  }
-
-  // 默认模板
-  return DEFAULT_TEMPLATE;
-}
-
-/**
  * createApi 服务（流程编排）
- *
  * @description
  * - 支持“自定义模板（example）生成 API 文件”
  **/
@@ -445,14 +413,11 @@ export async function createApiService(input: CreateApiInput) {
   const normalized = normalizeCreateApiInput(input);
   const { projectRoot, output, openapiUrl, example } = normalized;
 
-  // 解析 API 示例
-  const parseResult = exampleParser(example);
-
-  // 生成 API 模板
-  const template = createTemplate(parseResult.apiExample);
+  // 解析 API 示例结构
+  const parseResult = await tsExampleParser(example);
 
   // 创建 renderer
-  const render = createApiRender(template);
+  const render = createApiRender(parseResult.template);
 
   // 获取 openapi 接口信息
   const spec = await fetchOpenAPIJson(openapiUrl);
@@ -462,7 +427,7 @@ export async function createApiService(input: CreateApiInput) {
 
   // 生成页面代码
   const pageCode = generateApiPage({
-    imports: parseResult.imports || DEFAULT_IMPORTS,
+    imports: parseResult.imports,
     prelude: parseResult.prelude,
     code,
   });

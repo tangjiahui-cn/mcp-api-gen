@@ -1,29 +1,24 @@
+import express from "express";
+import swaggerUi from "swagger-ui-express";
+
+const app = express();
+const port = 3000;
+
 /**
- * 模拟创建 openapi json文件
+ * 构造 OpenAPI 文档
  */
-import * as fs from "fs";
+function createAPI(round: number) {
+  const paths: Record<string, any> = {};
 
-const paths = {};
-const round = 400; // 1200 接口 (400 * 3)
-
-function createAPI(round) {
   for (let i = 1; i <= round; i++) {
-    // list
+    // list 接口
     paths[`/api/module${i}/list`] = {
       get: {
         tags: ["Mock模块"],
         summary: `列表${i}`,
         parameters: [
-          {
-            name: "page",
-            in: "query",
-            schema: { type: "number" },
-          },
-          {
-            name: "size",
-            in: "query",
-            schema: { type: "number" },
-          },
+          { name: "page", in: "query", schema: { type: "number" } },
+          { name: "size", in: "query", schema: { type: "number" } },
         ],
         responses: {
           200: {
@@ -38,7 +33,7 @@ function createAPI(round) {
       },
     };
 
-    // create
+    // create 接口
     paths[`/api/module${i}/create`] = {
       post: {
         tags: ["Mock模块"],
@@ -63,7 +58,7 @@ function createAPI(round) {
       },
     };
 
-    // delete
+    // delete 接口
     paths[`/api/module${i}/delete/{id}`] = {
       delete: {
         tags: ["Mock模块"],
@@ -98,7 +93,7 @@ function createAPI(round) {
     },
     servers: [
       {
-        url: "http://localhost:3000",
+        url: `http://localhost:${port}`,
       },
     ],
     paths,
@@ -137,4 +132,32 @@ function createAPI(round) {
   };
 }
 
-fs.writeFileSync("./api-docs.json", JSON.stringify(createAPI(round), null, 2));
+// 初始化文档（默认 1200 接口）
+let apiDoc = createAPI(400);
+
+/**
+ * 提供 OpenAPI JSON
+ */
+app.get("/api-docs.json", (req, res) => {
+  const round = Number(req.query.round || 400);
+  res.json(createAPI(round));
+});
+
+/**
+ * Swagger UI
+ */
+app.use(
+  "/docs",
+  swaggerUi.serve,
+  swaggerUi.setup(apiDoc, {
+    explorer: true,
+  }),
+);
+
+/**
+ * 启动服务
+ */
+app.listen(port, () => {
+  console.log(`docs: http://localhost:${port}/docs`);
+  console.log(`openapi: http://localhost:${port}/api-docs.json`);
+});

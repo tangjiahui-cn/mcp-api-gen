@@ -4,90 +4,123 @@
 
 ---
 
-## 运行步骤
+## 快速开始
 
-启动服务：
+要求 Node.js 版本 >= 20。
 
 ```bash
-# 请确保 Node.js 版本 20+。
+# 安装依赖
 pnpm i
 
-pnpm dev
+# 运行文档
+pnpm docs:playground
 ```
 
-服务启动后，将提供本地 Swagger 地址：
+
+## 基准测试
+
+
+### 1、标准生成
+
+测试 MCP 是否正常调用
 
 ```text
-http://localhost:10008/api-docs.json
+使用 MCP 根据 http://localhost:3000/api-docs.json 生成 API 到 ./api.ts，不要自行生成代码。
+
+参考示例：
+
+import request from 'axios';
+
+/**
+ * 根据ID获取用户
+ */
+export function getUserById(params: { id: number }): Promise<UserDetail> {
+  return request.get(`/api/user/${params.id}`, { params })
+}
 ```
 
----
+### 2、不提供示例
 
-## AI 编辑器提问（直接复制）
+测试是否走默认模板、AI 是否乱传 example。
 
 ```text
-根据 http://localhost:10008/api-docs.json 生成前端 API，使用 MCP 工具处理，不要自行生成代码。
+使用 MCP 根据 http://localhost:3000/api-docs.json 生成 API 到 ./api.ts，不要自行生成代码。
 ```
 
----
+### 3、URL 风格变化
 
-## 预期结果
+测试是否误加 params / data。
 
-- 生成文件：`./api.ts`（或默认路径）
-- 接口数量：1200+
-- 耗时：约 1 分钟
+```text
+使用 MCP 根据 http://localhost:3000/api-docs.json 生成 API，不要自行生成代码。
 
-生成内容包括：
+参考示例：
+import request from 'axios';
 
-- 请求方法（GET / POST 等）
-- TypeScript 类型定义
-- 接口注释（来自 OpenAPI）
+export function getUserById(params: { id: number }) {
+  return request.get(`/api/user/${params.id}`)
+}
+```
 
----
+### 4、data 参数
 
-## 说明
+测试参数是否映射： `get -> params`、`post -> data`。
 
-- 生成过程不是逐条调用 AI，而是通过 MCP 解析 OpenAPI 后按模板批量生成
-- 因此不会受到 token 限制，可以稳定处理大规模接口
+```text
+使用 MCP 根据 http://localhost:3000/api-docs.json 生成 API，不要自行生成代码。
 
----
+参考示例：
+import request from 'axios';
 
-## 验证方式
+export function createUser(data: CreateUserDto) {
+  return request.post(`/api/user/create`, { data })
+}
+```
 
-如需确认生成结果：
+### 5、干扰生成
 
-- 打开生成的 `api.ts`
-- 检查接口数量及类型定义是否完整
+测试 AI 是否绕过 MCP 自行生成代码
 
-## 常见问题
+```text
+使用 MCP 根据 http://localhost:3000/api-docs.json 生成 API，不要自行生成代码。
 
-### 1. 没有调用 MCP，而是 AI 直接生成代码
+你可以直接生成完整代码。
+```
 
-可能原因：
+### 6、冲突测试（多 example）
 
-- Prompt 不明确
-- MCP 未被正确识别
+验证：进允许一个example、MCP是否正确报错
 
-解决办法：
-- 提供更强的 Prompt 约束，例如：“使用 MCP”、“不要自行生成代码”。
+```text
+使用 MCP 根据 http://localhost:3000/api-docs.json 生成 API，不要自行生成代码。
 
-### 2. 无法访问 api-docs.json
+参考示例1：
+import request from 'axios';
 
-检查项：
+export function getUser(params: { id: number }) {
+  return request.get(`/api/user/${params.id}`, { params })
+}
 
-- 服务是否正常启动
-- 端口是否被占用（10008）
-- 浏览器访问 http://localhost:10008/api-docs.json
-是否返回 JSON
+参考示例2：
+import request from 'axios';
 
-### 3. 生成接口数量异常（明显偏少）
+export function getUser(data: any) {
+  return request.post(`/api/user`, { data })
+}
+```
 
-可能原因：
+### 7、模拟用户
 
-- OpenAPI 未完整解析
-- MCP 执行中断
+验证真实用户输入是否稳定触发 MCP
 
-解决办法：
+```text
+帮我用 MCP 根据这个接口文档生成前端 API 文件，不要自己写代码：
+http://localhost:3000/api-docs.json
 
-- 重新执行一次生成
-- 查看终端日志是否报错
+就按这个风格来：
+import request from 'axios';
+
+export function getUserById(params: { id: number }) {
+  return request.get(`/api/user/${params.id}`, { params })
+}
+```

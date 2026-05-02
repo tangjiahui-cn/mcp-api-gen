@@ -4,13 +4,18 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "node index.js && serve -p 10008 ."
+    "docs:playground": "tsx watch index.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "测试接口自动生成。",
+  "description": "提供 1200+ 接口服务",
   "devDependencies": {
-    "serve": "^14.2.6"
+    "@types/express": "^5.0.6",
+    "@types/swagger-ui-express": "^4.1.8"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "swagger-ui-express": "^5.0.1"
   }
 }

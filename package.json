@@ -11,7 +11,8 @@
     "build": "cross-env mode=production tsx build.ts && shx chmod +x dist/index.js",
     "build:full": "cross-env mode=development tsx build.ts && shx chmod +x dist/index.js",
     "debug": "tsx watch debug.ts",
-    "debug:mcp": "npx @modelcontextprotocol/inspector node ./dist/index.js"
+    "debug:mcp": "npx @modelcontextprotocol/inspector node ./dist/index.js",
+    "docs:playground": "pnpm -F playground docs:playground"
   },
   "bin": {
     "mcp-api-gen": "./dist/index.js"

@@ -274,6 +274,9 @@ export function generateTsTypes(models: Array<Model>): string {
     models.map(({ name, schema }) => [name, schema]),
   );
 
+  // allOf / oneOf 类型，即 & 或 |
+  const ALL_ONE_REG = /[&|]/;
+
   return models
     .map(({ name, schema }) => {
       const type = toTsType(schema, refs, new Set(), {
@@ -282,7 +285,15 @@ export function generateTsTypes(models: Array<Model>): string {
 
       const comment = formatComment(schema.description);
 
-      return `${comment}export type ${name} = ${type};`;
+      if (
+        schema.type === "object" &&
+        type.trim().startsWith("{") && // 必须是对象
+        !ALL_ONE_REG.test(type) // 不能是 allOf、oneOf
+      ) {
+        return `${comment}\nexport interface ${name} ${type}`;
+      }
+
+      return `${comment}\nexport type ${name} = ${type};`;
     })
     .join("\n\n");
 }

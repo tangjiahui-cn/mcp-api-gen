@@ -8,7 +8,7 @@
 
 OpenAPI 接口生成工具，支持在 AI 编辑器中生成前端 API。
 
-- ⚡ 1000+ 接口约 1 分钟完成（playground 可验证）  
+- ⚡ 1000+ 接口约 1 分钟完成（playground 可验证）
 - 🌐 支持内网 OpenAPI 2 / 3 文档解析
 - 🧩 基于模板生成（结果可控、无 AI 幻觉）
 
@@ -85,7 +85,6 @@ MCP Server 工具通常用来提供接口能力，需要多次调用完成生成
 
 默认按 axios 风格生成，生成结果由示例代码决定，不做额外结构转换。
 
-
 ```ts
 request.get(url, { params });
 request.post(url, { data });
@@ -112,6 +111,7 @@ pnpm debug:mcp
 ```
 
 ### 2、运行文档示例
+
 启动 playground 文档服务，确认以下地址可访问：
 
 ```text

@@ -10,6 +10,5 @@ export function formatComment(text?: string, isInline?: boolean) {
 
   return `/**
  * ${text}
- */
-`;
+ */`;
 }

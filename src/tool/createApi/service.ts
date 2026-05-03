@@ -121,6 +121,7 @@ async function createTsApiRenderer(
   // 渲染函数（将单个 API 信息渲染成代码）
   const render: ApiRenderType = (ctx) => {
     const tsApiInfo = createTsApiInfo(ctx.apiInfo, ctx.refs, { inline });
+
     return templateRender(tsApiInfo);
   };
 

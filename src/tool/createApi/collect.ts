@@ -1,4 +1,4 @@
-import { OpenAPISpec, SchemaObject } from "@/schema";
+import { ApiSchemaInfo, OpenAPISpec, SchemaObject } from "@/schema";
 import { ApiRenderUnit } from "./generate";
 import { Model } from "./renderer";
 
@@ -45,7 +45,9 @@ export function resolveSchemaNames(
   const visiting = new Set<string>();
   const result: string[] = [];
 
-  const dfs = (name: string) => {
+  // 按依赖顺序解析 schema
+  function visit(name: string) {
+    // 避免循环依赖
     if (!name || visited.has(name) || visiting.has(name)) return;
 
     const schema = schemas[name];
@@ -53,23 +55,34 @@ export function resolveSchemaNames(
 
     visiting.add(name);
 
-    for (const dep of extractSchemaRefs(schema)) {
-      if (schemas[dep]) dfs(dep);
-    }
+    extractSchemaRefs(schema).forEach((dep) => {
+      if (schemas[dep]) visit(dep);
+    });
 
     visiting.delete(name);
     visited.add(name);
     result.push(name);
-  };
-
-  for (const { apiInfo } of apiList) {
-    const refs = [
-      getSchemaNameFromRef(apiInfo.request?.body?.ref),
-      getSchemaNameFromRef(apiInfo.response?.ref),
-    ];
-
-    refs.forEach((r) => r && dfs(r));
   }
+
+  // 收集入口依赖
+  function collect(entry?: ApiSchemaInfo) {
+    if (!entry) return;
+
+    // $ref 形式
+    const ref = getSchemaNameFromRef(entry.ref);
+    if (ref) visit(ref);
+
+    // schema 形式 （array、object等）
+    if (entry.schema) {
+      extractSchemaRefs(entry.schema).forEach(visit);
+    }
+  }
+
+  // 收集所有 API 依赖
+  apiList.forEach(({ apiInfo }) => {
+    collect(apiInfo.request?.body);
+    collect(apiInfo.response);
+  });
 
   return result;
 }
@@ -83,7 +96,7 @@ function extractSchemaRefs(schema: SchemaObject): string[] {
   const walk = (s?: SchemaObject) => {
     if (!s) return;
 
-    const ref = getSchemaNameFromRef((s as any).$ref);
+    const ref = getSchemaNameFromRef(s.$ref);
     if (ref) return deps.add(ref);
 
     if (s.type === "array") return walk(s.items);
@@ -92,9 +105,9 @@ function extractSchemaRefs(schema: SchemaObject): string[] {
       Object.values(s.properties || {}).forEach(walk);
     }
 
-    (s as any).allOf?.forEach(walk);
-    (s as any).oneOf?.forEach(walk);
-    (s as any).anyOf?.forEach(walk);
+    s.allOf?.forEach(walk);
+    s.oneOf?.forEach(walk);
+    s.anyOf?.forEach(walk);
   };
 
   walk(schema);

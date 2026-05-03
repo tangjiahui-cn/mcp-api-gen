@@ -16,7 +16,7 @@ export function buildRequestType(
   }
 
   const params = [...(path || []), ...(query || [])];
-  if (!params.length) return;
+  if (!params.length) return "any";
 
   const lines = params.map((p) => {
     const optional = p.required ? "" : "?";

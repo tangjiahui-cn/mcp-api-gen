@@ -1,315 +1,44 @@
 #!/usr/bin/env node
 import fs from "fs";
 import path from "path";
-import { type ApiRenderType, createApiRender } from "./renderer";
-import type { ApiInfo, OpenAPISpec, OpenApiOperationObject } from "@/schema";
 import {
-  toCamelCase,
-  formatCode,
-  createError,
-  fetchOpenAPIJson,
-} from "@/share";
-import {
-  getResponseSchema,
-  toTsType,
-  getRequestBodySchema,
-  tsExampleParser,
-} from "./parser";
+  PageRenderOptions,
+  type ApiRenderType,
+  CreateApiRenderResult,
+  createTemplateRender,
+} from "./renderer";
+import { formatCode, createError, fetchOpenAPIJson } from "@/share";
 // @ts-ignore
 import { CallToolResultSchema } from "@modelcontextprotocol/sdk/dist/esm/types";
 import type { CreateApiInput } from "./schema";
-import { normalizeCreateApiInput, normalizeMethod } from "./normalize";
-import { HttpMethod } from "@/types";
-
-/** 判断是否为 {} */
-function isEmptyObjectType(type: string): boolean {
-  return !!type && type.replace(/\s/g, "") === "{}";
-}
+import { normalizeCreateApiInput } from "./normalize";
+import {
+  createTsApiInfo,
+  generateApiResult,
+  generateTsTypes,
+} from "./generate";
+import { collectModels } from "@/tool/createApi/collect";
+import { ExampleParser } from "@/schema";
+import { baseExampleParser } from "./parserExample";
+import { createTemplate, DEFAULT_IMPORTS } from "./parserTemplate";
 
 /**
- * 根据接口路径生成函数名（驼峰命名、忽略 /api）
- *
- * 示例：
- * '/api/user/list'                -> 'userList'
- * '/api/user/detail/{id}'         -> 'userDetailById'
- * '/api/dept/push/config/list'    -> 'pushConfigList'
- * '/api/user/delete' (delete)     -> 'deleteUserDelete'   // 避免关键字冲突
- * '/api/export' (post)            -> 'postExport'         // 避免关键字冲突
+ * TypeScript 实例解析器
  */
-function generateName(method: string, apiPath: string) {
-  // 将 {id} 转为 ById，避免函数名语义丢失
-  let segments = apiPath
-    .replace(/\{(\w+)\}/g, "By_$1")
-    .split("/")
-    .filter(Boolean)
-    // 去掉通用前缀 api
-    .filter((s) => s.toLowerCase() !== "api");
 
-  // 控制函数名长度，仅取末尾 3 段
-  segments = segments.slice(-3);
+const tsExampleParser: ExampleParser = async (example) => {
+  // 解析 API 示例
+  const parseResult = baseExampleParser(example);
 
-  // 转驼峰
-  let name = segments.map((s, i) => toCamelCase(s, i === 0)).join("");
+  // 生成 API 模板
+  const template = createTemplate(parseResult.apiExample);
 
-  // 避免 JS 关键字冲突
-  const reserved = new Set([
-    "delete",
-    "export",
-    "import",
-    "default",
-    "function",
-    "class",
-  ]);
-
-  if (!name || reserved.has(name)) {
-    name = method + name.charAt(0).toUpperCase() + name.slice(1);
-  }
-
-  return name;
-}
-
-type GenerateResponseTypeResult = {
-  code: string;
-  isMissingSchema: boolean;
-  isTyped: boolean;
+  return {
+    template,
+    imports: parseResult.imports || DEFAULT_IMPORTS,
+    prelude: parseResult.prelude,
+  };
 };
-
-/** 生成返回结果类型 */
-function generateResponseType(options: {
-  op: OpenApiOperationObject;
-  spec: OpenAPISpec;
-}): GenerateResponseTypeResult {
-  const { op, spec } = options;
-  const markMissing = (): GenerateResponseTypeResult => {
-    return {
-      code: "any",
-      isTyped: false,
-      isMissingSchema: true,
-    };
-  };
-
-  const responseSchema = getResponseSchema(op);
-  if (!responseSchema) {
-    return markMissing();
-  }
-
-  const tsType = toTsType(responseSchema, spec);
-
-  // 空对象降级为 any
-  if (isEmptyObjectType(tsType)) {
-    return markMissing();
-  }
-
-  return {
-    code: tsType,
-    isTyped: true,
-    isMissingSchema: false,
-  };
-}
-
-type GenerateRequestTypeResult = {
-  code: string;
-  isMissingSchema: boolean; // 是否类型丢失
-  isTyped: boolean; // 是否类型完整
-};
-
-/** 生成请求参数类型 */
-function generateRequestType(options: {
-  op: OpenApiOperationObject;
-  spec: OpenAPISpec;
-}): GenerateRequestTypeResult {
-  const { op, spec } = options;
-  let isMissingSchema = false;
-
-  const markMissing = (): GenerateRequestTypeResult => {
-    isMissingSchema = true;
-
-    return {
-      code: `Record<string, any>`,
-      isMissingSchema: true,
-      isTyped: false,
-    };
-  };
-
-  // OpenAPI3
-  const bodySchema = getRequestBodySchema(op);
-  if (bodySchema) {
-    const tsType = toTsType(bodySchema, spec);
-
-    if (!tsType || tsType.trim() === "any") {
-      return markMissing();
-    }
-
-    return {
-      code: tsType,
-      isMissingSchema: false,
-      isTyped: true,
-    };
-  }
-
-  // Swagger2
-  const body = op.parameters?.find((p: any) => p.in === "body");
-  if (body?.schema) {
-    const tsType = toTsType(body.schema, spec);
-
-    if (!tsType || tsType.trim() === "any") {
-      return markMissing();
-    }
-
-    return {
-      code: tsType,
-      isMissingSchema: false,
-      isTyped: true,
-    };
-  }
-
-  const params = op.parameters || [];
-
-  if (!params.length) {
-    return {
-      code: "",
-      isMissingSchema: false,
-      isTyped: false,
-    };
-  }
-
-  const typeMap: Record<string, string> = {
-    string: "string",
-    integer: "number",
-    number: "number",
-    boolean: "boolean",
-  };
-
-  const lines = params.map((p: any) => {
-    const optional = p.required ? "" : "?";
-
-    const type = p.schema ? toTsType(p.schema, spec) : typeMap[p.type] || "any";
-
-    if (type === "any") {
-      isMissingSchema = true;
-    }
-
-    return `  ${p.name}${optional}: ${type};`;
-  });
-
-  return {
-    code: `{\n${lines.join("\n")}\n}`,
-    isMissingSchema,
-    isTyped: !isMissingSchema,
-  };
-}
-
-type GenerateApiResult = {
-  code: string;
-  isMissingSchema: boolean; // 是否存在类型丢失
-  isTyped: boolean; // 是否请求参数完全类型化
-};
-
-/** 生成单个 API 方法 */
-function generateApi(options: {
-  method: HttpMethod;
-  apiPath: string;
-  op: OpenApiOperationObject;
-  spec: OpenAPISpec;
-  render: ApiRenderType;
-}): GenerateApiResult {
-  const { method, apiPath, op, spec, render } = options;
-  const name = generateName(method, apiPath);
-  const paramsName = method === "get" ? "params" : "data";
-
-  // 处理路径参数
-  const hasPathParam = apiPath.includes("{");
-  const url = hasPathParam
-    ? `${apiPath.replace(/\{(\w+)\}/g, (_, key) => `\${${paramsName}?.${key}}`)}`
-    : `${apiPath}`;
-
-  const requestResult = generateRequestType({ op, spec });
-  const responseResult = generateResponseType({ op, spec });
-
-  const apiInfo: ApiInfo = {
-    name: name,
-    method,
-    url,
-    paramsName,
-    paramsType: method === "get" ? "params" : "data",
-    requestType: requestResult.code || "any",
-    responseType: responseResult.code || "any",
-    summary: op?.summary || "",
-  };
-
-  return {
-    code: render(apiInfo),
-    isMissingSchema:
-      requestResult.isMissingSchema || responseResult.isMissingSchema,
-    isTyped: requestResult.isTyped || responseResult.isTyped,
-  };
-}
-
-/** 生成全部 API */
-function generateApiCode(
-  spec: OpenAPISpec,
-  render: ApiRenderType,
-): {
-  code: string;
-  stats: {
-    /** api 总数 */
-    totalCount: number;
-    /** 完整类型 接口数量 */
-    typedCount: number;
-    /** 完整类型 接口占比 */
-    typedRatio: number;
-    /** 缺失schema 接口数量 */
-    missingCount: number;
-    /** 缺失schema 接口地址列表 */
-    missingList: string[];
-  };
-} {
-  const result: string[] = [];
-
-  let totalCount = 0;
-  let typedCount = 0;
-  let missingCount = 0;
-  let missingList: string[] = [];
-
-  for (const [apiPath, methods] of Object.entries(spec.paths || {})) {
-    for (const [method, op] of Object.entries(methods || {})) {
-      const m = normalizeMethod(method);
-      if (!m) continue;
-
-      const apiResult = generateApi({
-        method: m,
-        apiPath,
-        op,
-        spec,
-        render,
-      });
-
-      result.push(apiResult.code);
-
-      totalCount++;
-      if (apiResult.isTyped) {
-        typedCount++;
-      }
-      if (apiResult.isMissingSchema) {
-        missingCount++;
-        missingList.push(apiPath);
-      }
-    }
-  }
-
-  return {
-    code: result.join("\n\n"),
-    stats: {
-      totalCount,
-      typedCount,
-      missingCount,
-      missingList,
-      typedRatio: totalCount
-        ? parseFloat((typedCount / totalCount).toFixed(2))
-        : 0,
-    },
-  };
-}
 
 /**
  * 写入输出文件
@@ -322,26 +51,17 @@ function writeOutputFile({
   output,
   code,
 }: {
-  projectRoot?: string;
-  output?: string;
+  projectRoot: string;
+  output: string;
   code: string;
 }) {
-  const root = projectRoot || process.cwd();
-  const resolvedRoot = path.resolve(root);
+  const resolvedRoot = path.resolve(projectRoot);
 
-  if (resolvedRoot === "/" || resolvedRoot === process.env.HOME) {
-    throw createError(
-      "禁止将 projectRoot 设置为系统根目录或用户主目录",
-      "writeOutputFile",
-    );
-  }
+  const outputPath = output.startsWith("/")
+    ? output
+    : path.resolve(resolvedRoot, output);
 
-  const outputFile = output || "./api.ts";
-
-  const outputPath = outputFile.startsWith("/")
-    ? outputFile
-    : path.resolve(resolvedRoot, outputFile);
-
+  // 最终防线：禁止路径逃逸
   if (!outputPath.startsWith(resolvedRoot)) {
     throw createError("输出路径必须位于 projectRoot 目录内", "writeOutputFile");
   }
@@ -352,7 +72,9 @@ function writeOutputFile({
   return outputPath;
 }
 
-/** 格式化 MCP 结果 */
+/**
+ * 格式化 MCP 结果
+ */
 function formatMcpResult({
   outputPath,
   stats,
@@ -361,10 +83,6 @@ function formatMcpResult({
   stats: {
     /** 接口总数 */
     totalCount: number;
-    /** 已生成类型接口数 */
-    typedCount: number;
-    /** 已丢失类型接口数 */
-    missingCount: number;
   };
 }): CallToolResultSchema {
   return {
@@ -379,72 +97,94 @@ function formatMcpResult({
 ${outputPath}
 
 接口统计：
-- 总计生成 API 数量：${stats.totalCount}
-- 已生成类型接口数：${stats.typedCount}
-- 丢失类型接口数：${stats.missingCount}`,
+- 总计生成 API 数量：${stats.totalCount}`,
       },
     ],
   };
 }
 
 /**
- * 生成 api 页面代码
+ * 创建 TypeScript 类型的 API 渲染器
+ * @param example 用户提供的 api 示例
+ * @param inline api 实例类型是否内联
+ */
+async function createTsApiRenderer(
+  example?: string,
+  inline?: boolean,
+): Promise<CreateApiRenderResult> {
+  // 解析 API 示例
+  const parseResult = await tsExampleParser(example);
+
+  // 创建模板渲染器
+  const templateRender = createTemplateRender(parseResult.template);
+
+  // 渲染函数（将单个 API 信息渲染成代码）
+  const render: ApiRenderType = (ctx) => {
+    const tsApiInfo = createTsApiInfo(ctx.apiInfo, ctx.refs, { inline });
+    return templateRender(tsApiInfo);
+  };
+
+  return {
+    imports: parseResult.imports,
+    prelude: parseResult.prelude,
+    render,
+  };
+}
+
+/**
+ * 创建 TypeScript 类型的页面渲染器
  * @param options
  */
-function generateApiPage(options: {
-  /** 所有 import 语句 */
-  imports: string;
-  /** API 函数之前的顶层代码（不包含 import */
-  prelude: string;
-  /** api部分生成代码 */
-  code: string;
-}) {
-  return [options?.imports, options?.prelude, options?.code]
+export function tsPageRender(options: PageRenderOptions): string {
+  const tsTypes = generateTsTypes(options.models);
+  const prelude = [tsTypes, options.prelude].filter(Boolean).join("\n\n");
+
+  return [options?.header, options?.imports, prelude, options.apis]
     .filter(Boolean)
     .join("\n\n");
 }
 
 /**
- * createApi 服务（流程编排）
- * @description
- * - 支持“自定义模板（example）生成 API 文件”
+ * createApi 流程编排
+ * @description 支持通过用户提供示例（example）生成 api 文件
  **/
 export async function createApiService(input: CreateApiInput) {
   const normalized = normalizeCreateApiInput(input);
   const { projectRoot, output, openapiUrl, example } = normalized;
 
-  // 解析 API 示例结构
-  const parseResult = await tsExampleParser(example);
+  // 是否内联类型
+  const inline = false;
 
-  // 创建 renderer
-  const render = createApiRender(parseResult.template);
-
-  // 获取 openapi 接口信息
+  // 拉取 OpenAPI
   const spec = await fetchOpenAPIJson(openapiUrl);
 
-  // 生成 api 代码
-  const { code, stats } = generateApiCode(spec, render);
+  // 创建 renderer（TODO：自定义 apiRenderer）
+  const renderer = await createTsApiRenderer(example, inline);
 
-  // 生成页面代码
-  const pageCode = generateApiPage({
-    imports: parseResult.imports,
-    prelude: parseResult.prelude,
-    code,
+  // 生成 api
+  const apiResult = generateApiResult(spec, renderer.render);
+  const models = inline ? [] : collectModels(apiResult.apiList, spec);
+
+  // 生成页面代码 （TODO: 自定义 pageRender）
+  const pageCode = tsPageRender({
+    models,
+    imports: renderer.imports,
+    prelude: renderer.prelude,
+    apis: apiResult.apiList.map((x) => x.code).join("\n\n"),
   });
 
-  // 写入文件
+  // 写文件（自动读取项目 prettier 配置）
   const outputPath = writeOutputFile({
     projectRoot,
     output,
     code: await formatCode(pageCode, {
-      // 用于读取用户项目 prettier 配置
       projectRoot: input?.projectRoot,
     }),
   });
 
-  // 返回 MCP 结果
+  // MCP 返回
   return formatMcpResult({
     outputPath,
-    stats,
+    stats: apiResult.stats,
   });
 }

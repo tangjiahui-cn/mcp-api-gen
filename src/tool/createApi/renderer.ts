@@ -1,9 +1,53 @@
-import { ApiInfo, ApiInfoKey } from "@/schema";
+import { ApiInfo, ApiInfoKey, SchemaObject } from "@/schema";
 
-/**
- * API 渲染函数
- */
-export type ApiRenderType = (apiInfo: Partial<ApiInfo>) => string;
+export type RenderContextRefs = Record<string, SchemaObject>;
+
+export type RenderContext = {
+  apiInfo: ApiInfo;
+  refs: RenderContextRefs;
+};
+
+/** API 渲染函数 */
+export type ApiRenderType = (ctx: RenderContext) => string;
+
+export type CreateApiRenderResult = {
+  /** 所有 import 语句 */
+  imports: string;
+
+  /** API 函数之前的顶层代码（不包含 import） */
+  prelude: string;
+
+  /** API 渲染函数（api信息 -> api代码文本） */
+  render: ApiRenderType;
+};
+
+/** 创建 API 渲染函数 */
+export type CreateApiRenderType = () => Promise<CreateApiRenderResult>;
+
+export type Model = {
+  schema: SchemaObject;
+  name: string;
+};
+
+export type PageRenderOptions = {
+  /** 页面头部（常用于添加注释） */
+  header?: string;
+
+  /** 所有 import 语句 */
+  imports: string;
+
+  /** API 函数之前的顶层代码（不包含 import） */
+  prelude: string;
+
+  /** API 函数体代码 */
+  apis: string;
+
+  /** API 依赖数据结构 */
+  models: Array<Model>;
+};
+
+/** API 页面渲染函数 */
+export type PageRender = (options: PageRenderOptions) => string;
 
 /** 静态文本片段 */
 type TextToken = {
@@ -19,13 +63,6 @@ type VarToken = {
 
 /** 模板 token */
 type Token = TextToken | VarToken;
-
-/** fallback 映射 */
-const FALLBACK: Partial<Record<ApiInfoKey, string>> = {
-  summary: "",
-  responseType: "any",
-  requestType: "any",
-};
 
 /** 编译模板为 tokens */
 function compile(template: string): Token[] {
@@ -66,19 +103,12 @@ function compile(template: string): Token[] {
   return tokens;
 }
 
-/** 格式化变量值 */
-function formatValue(key: ApiInfoKey, value: unknown): string {
-  if (value === undefined || value === null) {
-    return FALLBACK[key] ?? "";
-  }
-  return String(value);
-}
-
 /**
- * 创建 API 渲染器
+ * 创建模板渲染器
  * @param template 模板字符串（包含 {{key}}）
  */
-export function createApiRender(template: string): ApiRenderType {
+type TemplateRender = (data: Record<string, any>) => string;
+export function createTemplateRender(template: string): TemplateRender {
   if (!template.includes("{{")) {
     return () => template;
   }
@@ -86,15 +116,14 @@ export function createApiRender(template: string): ApiRenderType {
   // 预编译模板（避免多次重复正则替换）
   const tokens = compile(template);
 
-  return function render(apiInfo: Partial<ApiInfo>): string {
+  return function render(data: Record<string, any>) {
     let output = "";
 
     for (const token of tokens) {
       if (token.type === "text") {
         output += token.value;
       } else {
-        const value = apiInfo[token.key];
-        output += formatValue(token.key, value);
+        output += data[token.key] ?? "";
       }
     }
 

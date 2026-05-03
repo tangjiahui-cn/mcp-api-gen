@@ -2,26 +2,38 @@
  * Schema 节点定义（用于描述请求/响应的数据结构）
  */
 export type SchemaObject = {
-  /** 当前节点的数据类型（string / number / object / array 等） */
+  /** 基础类型（string / number / object / array 等） */
   type?: string;
 
-  /** 字段描述（通常来自接口文档，用于生成注释） */
+  /** 字段描述 */
   description?: string;
 
-  /** 对象类型的属性集合（key -> 子 Schema） */
+  /** 对象属性 */
   properties?: Record<string, SchemaObject>;
 
-  /** 数组元素的类型定义（当 type 为 array 时生效） */
+  /** 数组元素 */
   items?: SchemaObject;
 
-  /** 必填字段列表（用于区分可选/必选） */
+  /** 必填字段 */
   required?: string[];
 
-  /** 引用其他 Schema（如 #/components/schemas/User） */
+  /** 引用 */
   $ref?: string;
 
   /** 枚举 */
   enum?: (string | number | boolean | null)[];
+
+  /** 是否可为 null */
+  nullable?: boolean;
+
+  /** 联合类型（满足其一） */
+  oneOf?: SchemaObject[];
+
+  /** 联合类型（满足其一，语义类似 oneOf） */
+  anyOf?: SchemaObject[];
+
+  /** 组合类型（全部满足） */
+  allOf?: SchemaObject[];
 };
 
 /**
@@ -43,6 +55,26 @@ export type OpenAPISpec = {
     /** schema 模型定义集合 */
     schemas?: Record<string, SchemaObject>;
   };
+};
+
+export type OpenApiParameter = {
+  /** 参数名称 */
+  name: string;
+
+  /** 参数位置：query / path / body / header */
+  in: "query" | "path" | "body" | "header";
+
+  /** 是否必填 */
+  required?: boolean;
+
+  /** Swagger2 参数类型 */
+  type?: string;
+
+  /** 参数 schema，常用于 body 参数或 OpenAPI3 参数 */
+  schema?: SchemaObject;
+
+  /** 参数说明（对应 OpenAPI description） */
+  description?: string;
 };
 
 /**
@@ -67,22 +99,7 @@ export type OpenApiOperationObject = {
   };
 
   /** Swagger2 / OpenAPI 通用参数定义 */
-  parameters?: Array<{
-    /** 参数名称 */
-    name: string;
-
-    /** 参数位置：query / path / body / header */
-    in: "query" | "path" | "body" | "header";
-
-    /** 是否必填 */
-    required?: boolean;
-
-    /** Swagger2 参数类型 */
-    type?: string;
-
-    /** 参数 schema，常用于 body 参数或 OpenAPI3 参数 */
-    schema?: SchemaObject;
-  }>;
+  parameters?: Array<OpenApiParameter>;
 
   /** 标准 responses 定义 */
   responses?: Record<

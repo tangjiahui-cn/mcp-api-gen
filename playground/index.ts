@@ -8,11 +8,11 @@ function createAPI(round: number) {
   const paths: Record<string, any> = {};
 
   for (let i = 1; i <= round; i++) {
+    // 列表接口
     paths[`/api/module${i}/list`] = {
       get: {
         tags: ["Mock模块"],
-        summary: `列表${i}`,
-        description: `获取 module${i} 列表`,
+        summary: `获取 module${i} 列表`,
         parameters: [
           {
             name: "page",
@@ -42,11 +42,11 @@ function createAPI(round: number) {
       },
     };
 
+    // 创建接口
     paths[`/api/module${i}/create`] = {
       post: {
         tags: ["Mock模块"],
-        summary: `创建${i}`,
-        description: `创建 module${i}`,
+        summary: `创建 module${i}`,
         requestBody: {
           required: true,
           description: "创建参数",
@@ -73,11 +73,11 @@ function createAPI(round: number) {
       },
     };
 
+    // 删除接口
     paths[`/api/module${i}/delete/{id}`] = {
       delete: {
         tags: ["Mock模块"],
-        summary: `删除${i}`,
-        description: `删除 module${i}`,
+        summary: `删除 module${i}`,
         parameters: [
           {
             name: "id",
@@ -106,14 +106,12 @@ function createAPI(round: number) {
   return {
     openapi: "3.0.1",
     info: {
-      title: "Mock Bulk API",
-      description: "批量生成接口（支持复杂 schema / 循环引用）",
+      title: "Mock API",
       version: "1.0.0",
     },
     servers: [
       {
         url: `http://localhost:${port}`,
-        description: "本地服务",
       },
     ],
     paths,
@@ -121,22 +119,28 @@ function createAPI(round: number) {
       schemas: {
         BaseResponse: {
           type: "object",
-          description: "通用响应结构",
+          description: "通用返回结构",
           properties: {
             success: {
               type: "boolean",
-              description: "是否成功",
+              description: "请求是否成功",
             },
             message: {
               type: "string",
               description: "提示信息",
             },
             data: {
-              description: "返回数据",
+              description: "返回数据（结构不固定）",
               oneOf: [
                 { $ref: "#/components/schemas/PageResponse" },
-                { $ref: "#/components/schemas/Item" },
                 { $ref: "#/components/schemas/User" },
+                {
+                  type: "array",
+                  description: "列表结构",
+                  items: {
+                    $ref: "#/components/schemas/Item",
+                  },
+                },
               ],
             },
           },
@@ -144,7 +148,7 @@ function createAPI(round: number) {
 
         PageResponse: {
           type: "object",
-          description: "分页结果",
+          description: "分页数据",
           properties: {
             total: {
               type: "number",
@@ -160,7 +164,7 @@ function createAPI(round: number) {
             },
             list: {
               type: "array",
-              description: "列表数据",
+              description: "数据列表",
               items: {
                 $ref: "#/components/schemas/Item",
               },
@@ -187,20 +191,20 @@ function createAPI(round: number) {
               description: "标签列表",
               items: {
                 type: "string",
-                description: "标签",
+                description: "标签项",
               },
             },
             extra: {
               type: "object",
-              description: "扩展信息",
+              description: "扩展字段",
               properties: {
-                remark: {
-                  type: "string",
-                  description: "备注",
-                },
                 score: {
                   type: "number",
                   description: "评分",
+                },
+                remark: {
+                  type: "string",
+                  description: "备注",
                 },
               },
             },
@@ -209,15 +213,15 @@ function createAPI(round: number) {
 
         Item: {
           type: "object",
-          description: "树节点（递归结构）",
+          description: "树节点",
           properties: {
             id: {
               type: "string",
-              description: "ID",
+              description: "节点ID",
             },
             name: {
               type: "string",
-              description: "名称",
+              description: "节点名称",
             },
             children: {
               type: "array",
@@ -250,7 +254,7 @@ function createAPI(round: number) {
 
         Department: {
           type: "object",
-          description: "部门（包含用户，循环引用）",
+          description: "部门",
           properties: {
             id: {
               type: "string",
@@ -269,24 +273,43 @@ function createAPI(round: number) {
             },
           },
         },
+
+        Mix: {
+          description: "allOf 组合结构",
+          allOf: [
+            {
+              type: "object",
+              properties: {
+                a: {
+                  type: "string",
+                  description: "字段A",
+                },
+              },
+            },
+            {
+              type: "object",
+              properties: {
+                b: {
+                  type: "number",
+                  description: "字段B",
+                },
+              },
+            },
+          ],
+        },
       },
     },
   };
 }
 
-let apiDoc = createAPI(400);
+// 1200 接口
+const apiDoc = createAPI(400);
 
 app.get("/api-docs.json", (_, res) => {
   res.json(apiDoc);
 });
 
-app.use(
-  "/docs",
-  swaggerUi.serve,
-  swaggerUi.setup(apiDoc, {
-    explorer: true,
-  }),
-);
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(apiDoc));
 
 app.listen(port, () => {
   console.log(`docs: http://localhost:${port}/docs`);

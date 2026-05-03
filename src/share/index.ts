@@ -6,3 +6,4 @@ export * from "./formatCode";
 export * from "./fetchJson";
 export * from "./fetchOpenapi";
 export * from "./error";
+export * from "./formatComment";

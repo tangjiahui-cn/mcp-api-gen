@@ -6,7 +6,7 @@ import {
   OpenAPISpec,
   SchemaObject,
 } from "@/schema";
-import { toCamelCase } from "@/share";
+import { formatComment, toCamelCase } from "@/share";
 import {
   ApiRenderType,
   Model,
@@ -280,7 +280,9 @@ export function generateTsTypes(models: Array<Model>): string {
         inline: false,
       });
 
-      return `export type ${name} = ${type};`;
+      const comment = formatComment(schema.description);
+
+      return `${comment}export type ${name} = ${type};`;
     })
     .join("\n\n");
 }

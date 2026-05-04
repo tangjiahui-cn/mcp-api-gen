@@ -14,7 +14,11 @@ OpenAPI 接口生成工具，支持在 AI 编辑器中生成前端 API。
 
 ## 快速开始
 
+请确保已安装 Node.js（>= 20）。
+
 ### 1、配置 MCP：
+
+在你的 AI 编辑器（如 Cursor / Trae）中添加 MCP 配置：
 
 ```json
 {
@@ -29,13 +33,15 @@ OpenAPI 接口生成工具，支持在 AI 编辑器中生成前端 API。
 
 ### 2、一句话生成
 
-默认输出 ./api.ts
+在 AI 编辑器中输入提问：
+
+#### 默认输出（生成到 `./api.ts`）
 
 ```text
 使用MCP根据 http://localhost:3000/api-docs.json 生成前端API文件，不要自行生成代码
 ```
 
-指定输出位置
+#### 指定输出位置
 
 ```text
 使用MCP根据 http://localhost:3000/api-docs.json 生成前端API文件到 ./service/api.ts，不要自行生成代码
@@ -43,7 +49,9 @@ OpenAPI 接口生成工具，支持在 AI 编辑器中生成前端 API。
 
 > 说明：http://localhost:3000/api-docs.json 地址需本地运行此项目的 [playground 文档服务](./playground/README.md)。
 
-### 3、自定义生成风格（示例驱动）
+### 3、自定义生成风格（提供 API 示例）
+
+在 AI 编辑器中输入提问：
 
 ```text
 使用 MCP 根据 http://localhost:3000/api-docs.json 生成 API，不要自行生成代码。

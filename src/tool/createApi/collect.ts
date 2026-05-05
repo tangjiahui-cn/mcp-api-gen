@@ -1,6 +1,5 @@
-import { ApiSchemaInfo, OpenAPISpec, SchemaObject } from "@/schema";
+import { ApiSchemaInfo, OpenAPISpec, SchemaObject, Model } from "@/schema";
 import { ApiRenderUnit } from "./generate";
-import { Model } from "./renderer";
 
 const REF_REG = /^#\/(?:components\/schemas|definitions)\/([^/]+)$/;
 

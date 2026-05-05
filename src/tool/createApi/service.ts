@@ -1,12 +1,7 @@
 #!/usr/bin/env node
 import fs from "fs";
 import path from "path";
-import {
-  PageRenderOptions,
-  type ApiRenderType,
-  CreateApiRenderResult,
-  createTemplateRender,
-} from "./renderer";
+import { createTemplateRender } from "./renderer";
 import { formatCode, createError, fetchOpenAPIJson } from "@/share";
 // @ts-ignore
 import { CallToolResultSchema } from "@modelcontextprotocol/sdk/dist/esm/types";
@@ -18,7 +13,12 @@ import {
   generateTsTypes,
 } from "./generate";
 import { collectModels } from "@/tool/createApi/collect";
-import { ExampleParser } from "@/schema";
+import {
+  ExampleParser,
+  PageRenderOptions,
+  ApiRenderType,
+  CreateApiRenderResult,
+} from "@/schema";
 import { baseExampleParser } from "./parserExample";
 import { createTemplate, DEFAULT_IMPORTS } from "./parserTemplate";
 

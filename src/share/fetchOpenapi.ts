@@ -1,5 +1,5 @@
 import type { OpenAPISpec } from "@/schema";
-import { createError } from "@/share";
+import { createError } from "./error";
 import { fetchJson } from "./fetchJson";
 
 const COMMON_PATHS = [

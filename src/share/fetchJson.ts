@@ -1,4 +1,4 @@
-import { createError } from "@/share";
+import { createError } from "./error";
 
 /**
  * 发起 GET 请求并返回 JSON 数据

@@ -1,5 +1,9 @@
-import { ApiInfo, ApiSchemaInfo, SchemaObject } from "@/schema";
-import { RenderContextRefs } from "./renderer";
+import {
+  ApiInfo,
+  ApiSchemaInfo,
+  SchemaObject,
+  RenderContextRefs,
+} from "@/schema";
 
 /**
  * 请求参数转为 TypeScript 类型

@@ -5,13 +5,11 @@ import {
   OpenApiParameter,
   OpenAPISpec,
   SchemaObject,
-} from "@/schema";
-import { formatComment, toCamelCase } from "@/share";
-import {
   ApiRenderType,
   Model,
   RenderContextRefs,
-} from "@/tool/createApi/renderer";
+} from "@/schema";
+import { formatComment, toCamelCase } from "@/share";
 import { normalizeMethod } from "@/tool/createApi/normalize";
 import { HttpMethod } from "@/types";
 import { buildRequestType, buildSchemaType, toTsType } from "./parserSchema";

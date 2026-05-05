@@ -89,7 +89,7 @@ export function createUser(data: CreateUserDto) {
 
 ### 6、冲突测试（多 example）
 
-验证：进允许一个example、MCP是否正确报错
+验证：仅允许使用一个example、或 MCP 是否正确报错
 
 ```text
 使用 MCP 根据 http://localhost:3000/api-docs.json 生成 API，不要自行生成代码。

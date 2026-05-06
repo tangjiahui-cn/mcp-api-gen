@@ -16,11 +16,11 @@ OpenAPI 接口生成工具，支持在 AI 编辑器中生成前端 API。
 
 默认模板生成（axios）：
 
-<img src="https://cdn.jsdelivr.net/gh/tangjiahui-cn/assets@master/mcp-api-gen/one-sentence-generation-v1.gif" style="max-width: 100%;max-height: 550px" alt="默认模板生成 API"/>
+<img src="https://cdn.jsdelivr.net/gh/tangjiahui-cn/assets@master/mcp-api-gen/one-sentence-generation-v1.gif" height="550" alt="默认模板生成 API"/>
 
 用户提供 API 示例生成：
 
-<img src="https://cdn.jsdelivr.net/gh/tangjiahui-cn/assets@master/mcp-api-gen/user-example-generation-v1.gif" style="max-width: 100%;max-height: 550px" alt="用户提供 API 示例生成"/>
+<img src="https://cdn.jsdelivr.net/gh/tangjiahui-cn/assets@master/mcp-api-gen/user-example-generation-v1.gif" height="550" alt="用户提供 API 示例生成"/>
 
 ## 快速开始
 

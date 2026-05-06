@@ -12,6 +12,16 @@ OpenAPI 接口生成工具，支持在 AI 编辑器中生成前端 API。
 - 🌐 支持内网 OpenAPI 2 / 3 文档解析
 - 🧩 基于模板生成（结果可控、无 AI 幻觉）
 
+## 功能演示
+
+默认模板生成（axios）：
+
+<img src="https://cdn.jsdelivr.net/gh/tangjiahui-cn/assets@master/mcp-api-gen/one-sentence-generation-v1.gif" style="max-width: 100%;max-height: 550px" alt="默认模板生成 API"/>
+
+用户提供 API 示例生成：
+
+<img src="https://cdn.jsdelivr.net/gh/tangjiahui-cn/assets@master/mcp-api-gen/user-example-generation-v1.gif" style="max-width: 100%;max-height: 550px" alt="用户提供 API 示例生成"/>
+
 ## 快速开始
 
 请确保已安装 Node.js（>= 20）。

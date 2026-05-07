@@ -69,11 +69,13 @@ OpenAPI 接口生成工具，支持在 AI 编辑器中生成前端 API。
 参考示例：
 import request from 'axios';
 
+const prefix = '/user'
+
 /**
  * 根据ID获取用户
  */
 export function getUserById(params: { id: number }): Promise<UserDetail> {
-  return request.get(`/api/user/${params.id}`, { params })
+  return request.get(`${prefix}/user/${params.id}`, { params })
 }
 ```
 

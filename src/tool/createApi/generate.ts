@@ -209,7 +209,7 @@ export interface TsApiInfo {
   /** 请求方式 */
   method: HttpMethod;
 
-  /** 接口地址 */
+  /** 接口地址（必为 / 开头） */
   url: string;
 
   /** 参数变量名 */
@@ -254,7 +254,7 @@ export function createTsApiInfo(
   return {
     name,
     method,
-    url,
+    url: url.startsWith("/") ? url : `/${url}`,
     paramsName,
     paramsType,
     requestType,

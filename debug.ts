@@ -43,9 +43,19 @@ const MOCK_NO_PARAMS = {
   // "import request from 'axios';\n\nexport function getUserById(params: { id: number }) {\n  return request.get(`/api/user/${params.id}`, {})\n}",
 };
 
+const MOCK_PREFIX_INPUT = {
+  example:
+    "import axios from 'axios'; \n \n const request = axios; \n const prefix = '/xxx/api'; \n \n export function getUserById(params: { id: number }) { \n   return request.get(`${prefix}/user/${params.id}`, { params }) \n }",
+  // "import axios from 'axios'; \n \n const request = axios; \n const prefix = '/xxx/api'; \n \n export function getUserById(params: { id: number }) { \n   return request.get(`/user/${params.id}`, { params }) \n }",
+  // "import axios from 'axios'; \n \n const request = axios; \n const prefix = '/xxx/api'; \n \n export function getUserById(params: { id: number }) { \n   return request.get(`/user/id`, { params }) \n }",
+  openapiUrl: "http://localhost:3000/api-docs.json",
+  output,
+  projectRoot,
+};
+
 (async () => {
-  const input = MOCK_INPUT as any;
-  const info = await createApiService(MOCK_INPUT);
+  const input = MOCK_PREFIX_INPUT as any;
+  const info = await createApiService(input);
   console.log("生成信息：", info);
   console.log("生成成功：" + path.resolve(input.projectRoot, input.output));
 })();

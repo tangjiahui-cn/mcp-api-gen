@@ -134,7 +134,9 @@ export function createTemplateFromExample(example: string): string {
 
             // url
             if (arg.arguments.length > 0) {
-              arg.arguments[0] = t.identifier("__URL__");
+              arg.arguments[0] = replaceUrlTemplate(
+                arg.arguments[0] as t.Expression,
+              );
             }
 
             // 参数承载
@@ -172,9 +174,6 @@ export function createTemplateFromExample(example: string): string {
       comments: false,
     }).code;
 
-    // 替换 url
-    code = code.replaceAll("__URL__", "`{{url}}`");
-
     // 保持原有 summary 行为
     if ((commentType as any) === "block") {
       code = `/**\n * {{summary}}\n */\n${code}`;
@@ -189,6 +188,62 @@ export function createTemplateFromExample(example: string): string {
       "normalizeExampleByAst",
     );
   }
+}
+
+/**
+ * 将示例中 url 替换成模板
+ * @description 例如：`${prefix}/api/user` -> `${prefix}{{url}}`
+ */
+function replaceUrlTemplate(node: t.Expression): t.Expression {
+  // '/api/user'
+  if (t.isStringLiteral(node)) {
+    return createUrlTemplate();
+  }
+
+  // `${prefix}/api/user`
+  if (t.isTemplateLiteral(node)) {
+    const firstExpr = node.expressions[0];
+    const firstQuasi = node.quasis[0];
+
+    const hasPrefixExpression = firstExpr && firstQuasi?.value.raw === "";
+
+    if (hasPrefixExpression) {
+      return createUrlTemplate(firstExpr as t.Expression);
+    }
+
+    // `/user/${id}`
+    return createUrlTemplate();
+  }
+
+  // fallback
+  return createUrlTemplate();
+}
+
+/**
+ * 创建 URL 模板的 AST 节点
+ * @description 例如：生成 `{{url}}` 或 `${prefix}{{url}}` 的 AST 节点
+ */
+function createUrlTemplate(prefix?: t.Expression): t.TemplateLiteral {
+  return t.templateLiteral(
+    prefix
+      ? [
+          t.templateElement({
+            raw: "",
+            cooked: "",
+          }),
+          t.templateElement({
+            raw: "{{url}}",
+            cooked: "{{url}}",
+          }),
+        ]
+      : [
+          t.templateElement({
+            raw: "{{url}}",
+            cooked: "{{url}}",
+          }),
+        ],
+    prefix ? [prefix] : [],
+  );
 }
 
 /**

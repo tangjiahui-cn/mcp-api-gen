@@ -69,6 +69,7 @@ OpenAPI 接口生成工具，支持在 AI 编辑器中生成前端 API。
 参考示例：
 import request from 'axios';
 
+// API 前缀
 const prefix = '/user'
 
 /**

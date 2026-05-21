@@ -6,11 +6,11 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue)
 ![MCP](https://img.shields.io/badge/MCP-1.29.0-purple)
 
-OpenAPI 接口生成工具，支持在 AI 编辑器中生成前端 API。
+OpenAPI 接口生成工具，支持在 AI 编辑器中生成前端 API 。
 
-- ⚡ 1000+ 接口约 1 分钟完成（playground 可验证）
 - 🌐 支持内网 OpenAPI 2 / 3 文档解析
-- 🧩 基于模板生成（结果稳定可复现）
+- ⚡ 1000+ 接口约 1 分钟完成
+- 🧩 用户提供示例（基于模板批量生成）
 
 ## 功能演示
 

@@ -35,7 +35,7 @@ OpenAPI 接口生成工具，支持在 AI 编辑器中生成前端 API 。
   "mcpServers": {
     "mcp-api-gen": {
       "command": "npx",
-      "args": ["-y", "mcp-api-gen"]
+      "args": ["-y", "mcp-api-gen@latest"]
     }
   }
 }

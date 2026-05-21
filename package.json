@@ -1,11 +1,11 @@
 {
   "name": "mcp-api-gen",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "private": false,
   "main": "./dist/index.js",
   "module": "./dist/index.js",
-  "description": "基于 MCP 打通内网 OpenAPI，在 AI 编辑器中一分钟生成 1000+ TypeScript API。",
+  "description": "一个前端 API 生成工具，支持 AI 编辑器直接生成、内网 OpenAPI 2/3 解析、1000+ 接口约 1 秒生成。",
   "scripts": {
     "dev": "cross-env mode=development tsx build.ts --watch",
     "build": "cross-env mode=production tsx build.ts && shx chmod +x dist/index.js",

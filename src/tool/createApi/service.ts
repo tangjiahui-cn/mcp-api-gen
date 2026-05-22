@@ -22,10 +22,16 @@ import {
 import { baseExampleParser } from "./parserExample";
 import { createTemplate, DEFAULT_IMPORTS } from "./parserTemplate";
 
+function checkNodeVersion(minMajor: number = 20) {
+  const major = Number(process.versions.node.split(".")[0]);
+  if (major < minMajor) {
+    throw createError(`Node.js >= ${minMajor} required`);
+  }
+}
+
 /**
  * TypeScript 实例解析器
  */
-
 const tsExampleParser: ExampleParser = async (example) => {
   // 解析 API 示例
   const parseResult = baseExampleParser(example);
@@ -150,6 +156,8 @@ export function tsPageRender(options: PageRenderOptions): string {
  * @description 支持通过用户提供示例（example）生成 api 文件
  **/
 export async function createApiService(input: CreateApiInput) {
+  checkNodeVersion();
+
   const normalized = normalizeCreateApiInput(input);
   const { projectRoot, output, openapiUrl, example } = normalized;
 

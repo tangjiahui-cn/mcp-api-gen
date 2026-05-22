@@ -53,8 +53,15 @@ const MOCK_PREFIX_INPUT = {
   projectRoot,
 };
 
+const _PARAMS = {
+  example: MOCK_NO_PARAMS.example,
+  openapiUrl: "http://172.16.11.91:8082/v2/api-docs?group=deptConfig",
+  output,
+  projectRoot,
+};
+
 (async () => {
-  const input = MOCK_PREFIX_INPUT as any;
+  const input = _PARAMS as any;
   const info = await createApiService(input);
   console.log("生成信息：", info);
   console.log("生成成功：" + path.resolve(input.projectRoot, input.output));

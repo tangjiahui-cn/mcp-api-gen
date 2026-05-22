@@ -26,6 +26,8 @@ OpenAPI 接口生成工具，支持在 AI 编辑器中生成前端 API 。
 
 请确保已安装 Node.js（>= 20）。
 
+> 暂不支持中文 schema！（极少数情况下后端文档设置 @ApiModel({description: '模型名称'}) ）
+
 ### 1、配置 MCP：
 
 在你的 AI 编辑器（如 Cursor / Trae）中添加 MCP 配置：

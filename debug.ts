@@ -53,15 +53,17 @@ const MOCK_PREFIX_INPUT = {
   projectRoot,
 };
 
-const _PARAMS = {
+// TODO: 待完成中文 Schema 解析支持
+// 测试中文 schema
+const CHINA_PARAMS = {
   example: MOCK_NO_PARAMS.example,
-  openapiUrl: "http://172.16.11.91:8082/v2/api-docs?group=deptConfig",
+  openapiUrl: "http://localhost:3000/api-docs-cn.json",
   output,
   projectRoot,
 };
 
 (async () => {
-  const input = _PARAMS as any;
+  const input = CHINA_PARAMS as any;
   const info = await createApiService(input);
   console.log("生成信息：", info);
   console.log("生成成功：" + path.resolve(input.projectRoot, input.output));

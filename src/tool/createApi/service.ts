@@ -18,6 +18,8 @@ import {
   PageRenderOptions,
   ApiRenderType,
   CreateApiRenderResult,
+  SchemaObject,
+  OpenAPISpec,
 } from "@/schema";
 import { baseExampleParser } from "./parserExample";
 import { createTemplate, DEFAULT_IMPORTS } from "./parserTemplate";
@@ -151,6 +153,36 @@ export function tsPageRender(options: PageRenderOptions): string {
     .join("\n\n");
 }
 
+type Schemas = Record<string, SchemaObject>;
+
+/**
+ * 判断是否有中文 schema
+ */
+function isHasChineseSchema(schemas: Schemas): boolean {
+  return Object.keys(schemas).some((name) => {
+    return /[\u4e00-\u9fa5]/.test(name);
+  });
+}
+
+/**
+ * 获取 OpenAPI schema 集合
+ */
+export function resolveSchemas(spec: OpenAPISpec): Schemas {
+  // OpenAPI 3
+  if (spec.components?.schemas) {
+    return spec.components.schemas;
+  }
+
+  // Swagger 2
+  if (spec.definitions) {
+    return spec.definitions;
+  }
+
+  return {};
+}
+
+const DEFAULT_INLINE = false; // 类型是否内联
+
 /**
  * createApi 流程编排
  * @description 支持通过用户提供示例（example）生成 api 文件
@@ -158,14 +190,19 @@ export function tsPageRender(options: PageRenderOptions): string {
 export async function createApiService(input: CreateApiInput) {
   checkNodeVersion();
 
+  // TODO: 如果schema存在中文，则改为 inline 模式，同时MCP返回提示存在中文类型已改为内联类型
+  //...
+
   const normalized = normalizeCreateApiInput(input);
   const { projectRoot, output, openapiUrl, example } = normalized;
 
-  // 是否内联类型
-  const inline = false;
-
   // 拉取 OpenAPI
   const spec = await fetchOpenAPIJson(openapiUrl);
+  const schemas = resolveSchemas(spec);
+  const isHasChineseSchemas = isHasChineseSchema(schemas);
+
+  // 是否内联类型
+  const inline = isHasChineseSchemas || DEFAULT_INLINE;
 
   // 创建 renderer（TODO：自定义 apiRenderer）
   const renderer = await createTsApiRenderer(example, inline);

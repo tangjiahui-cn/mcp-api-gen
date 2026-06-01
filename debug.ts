@@ -63,7 +63,7 @@ const CHINA_PARAMS = {
 };
 
 (async () => {
-  const input = CHINA_PARAMS as any;
+  const input = MOCK_PREFIX_INPUT as any;
   const info = await createApiService(input);
   console.log("生成信息：", info);
   console.log("生成成功：" + path.resolve(input.projectRoot, input.output));

@@ -24,6 +24,10 @@ import {
 import { baseExampleParser } from "./parserExample";
 import { createTemplate, DEFAULT_IMPORTS } from "./parserTemplate";
 
+/**
+ * 检查 Node.js 版本不低于 minMajor
+ * @param minMajor Node.js 主版本号
+ */
 function checkNodeVersion(minMajor: number = 20) {
   const major = Number(process.versions.node.split(".")[0]);
   if (major < minMajor) {
@@ -91,13 +95,16 @@ function formatMcpResult({
   stats: {
     /** 接口总数 */
     totalCount: number;
+    /** 是否有中文schema */
+    isHasChineseSchemas?: boolean;
   };
 }): CallToolResultSchema {
   return {
     content: [
       {
         type: "text",
-        text: `[MCP执行完成]
+        text: [
+          `[MCP执行完成]
 
 前端 API 文件已生成，请勿重复生成代码。
 
@@ -106,6 +113,11 @@ ${outputPath}
 
 接口统计：
 - 总计生成 API 数量：${stats.totalCount}`,
+          stats?.isHasChineseSchemas &&
+            `存在中文 schema，已自动转为内联类型模式。`,
+        ]
+          .filter(Boolean)
+          .join("\n\n"),
       },
     ],
   };
@@ -188,11 +200,10 @@ const DEFAULT_INLINE = false; // 类型是否内联
  * @description 支持通过用户提供示例（example）生成 api 文件
  **/
 export async function createApiService(input: CreateApiInput) {
-  checkNodeVersion();
+  // 确保 Node.js 版本在 20 及以上
+  checkNodeVersion(20);
 
-  // TODO: 如果schema存在中文，则改为 inline 模式，同时MCP返回提示存在中文类型已改为内联类型
-  //...
-
+  // 初始化信息
   const normalized = normalizeCreateApiInput(input);
   const { projectRoot, output, openapiUrl, example } = normalized;
 
@@ -231,6 +242,9 @@ export async function createApiService(input: CreateApiInput) {
   // MCP 返回
   return formatMcpResult({
     outputPath,
-    stats: apiResult.stats,
+    stats: {
+      ...apiResult.stats,
+      isHasChineseSchemas,
+    },
   });
 }

@@ -83,6 +83,34 @@ export function getUserById(params: { id: number }): Promise<UserDetail> {
 }
 ```
 
+## CLI 用法
+
+除 MCP 调用外，`mcp-api-gen` 也支持直接以 CLI 方式生成：
+
+```bash
+# 默认输出 ./api.ts
+mcp-api-gen --openapiUrl http://localhost:3000/api-docs.json --projectRoot .
+
+# 指定输出路径与 API 风格示例
+mcp-api-gen --openapiUrl http://localhost:3000/api-docs.json \
+  --projectRoot . --output src/service/api.ts \
+  --example 'export function getUserById(params: { id: number }) { return request.get(`/api/user/${params.id}`, { params }) }'
+
+# 使用本地 OpenAPI JSON 文件
+mcp-api-gen --openapiUrl ./api-docs.json --projectRoot .
+```
+
+选项与 MCP 工具参数一致：
+
+| 选项 | 说明 | 默认值 |
+| --- | --- | --- |
+| `--openapiUrl` / `--openapi-url` | Swagger/OpenAPI 文档地址，或本地 JSON 文件（`file://` / 相对、绝对路径，非 `http(s)://` 开头即按本地文件读取） | 环境变量 `OPENAPI_URL` |
+| `--projectRoot` / `--project-root` | 项目根目录（必填） | - |
+| `--output` | 生成文件路径 | `./api.ts` |
+| `--example` | API 函数示例（原始文本） | - |
+
+> 不带任何参数运行 `mcp-api-gen` 时进入 MCP Server 模式，供 MCP 客户端调用；更多选项见 `mcp-api-gen --help`。
+
 ## 为什么做 mcp-api-gen？
 
 当我尝试使用 AI 编辑器来生成 api 文件时，遇到过这几个问题:

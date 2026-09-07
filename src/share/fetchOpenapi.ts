@@ -1,3 +1,6 @@
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import type { OpenAPISpec } from "@/schema";
 import { createError } from "./error";
 import { fetchJson } from "./fetchJson";
@@ -10,6 +13,56 @@ const COMMON_PATHS = [
   "/swagger/doc.json",
 ];
 
+/** 是否 http(s) 远程地址 */
+function isRemoteUrl(source: string): boolean {
+  return /^https?:\/\//i.test(source);
+}
+
+/**
+ * 将本地来源（file:// 或文件路径）解析为绝对路径
+ */
+function resolveLocalFilePath(source: string): string {
+  if (/^file:\/\//i.test(source)) {
+    try {
+      return fileURLToPath(source);
+    } catch {
+      throw createError(`file 地址不正确：${source}`, "fetchOpenAPIJson");
+    }
+  }
+  // 相对路径相对当前工作目录解析
+  return path.resolve(source);
+}
+
+/**
+ * 读取本地 OpenAPI JSON 文件
+ */
+async function loadLocalOpenAPIJson(source: string): Promise<OpenAPISpec> {
+  const filePath = resolveLocalFilePath(source);
+
+  let raw: string;
+  try {
+    raw = fs.readFileSync(filePath, "utf-8");
+  } catch {
+    throw createError(
+      `本地 OpenAPI 文件不存在或不可读：${filePath}`,
+      "fetchOpenAPIJson",
+    );
+  }
+
+  let spec: unknown;
+  try {
+    spec = JSON.parse(raw);
+  } catch {
+    throw createError(`本地文件不是合法 JSON：${filePath}`, "fetchOpenAPIJson");
+  }
+
+  if (!isOpenAPI(spec)) {
+    throw createError("本地文件数据格式不正确，非 OpenAPI", "fetchOpenAPIJson");
+  }
+
+  return spec;
+}
+
 /**
  * 获取 OpenAPI JSON
  */
@@ -17,6 +70,11 @@ export async function fetchOpenAPIJson(
   openapiUrl: string,
   options?: { timeout?: number },
 ): Promise<OpenAPISpec> {
+  // 本地来源：file:// 或文件路径（CLI 传 --openapiUrl ./api-docs.json 等）
+  if (!isRemoteUrl(openapiUrl)) {
+    return loadLocalOpenAPIJson(openapiUrl);
+  }
+
   try {
     const spec = await fetchJson<OpenAPISpec>(openapiUrl, options);
     if (isOpenAPI(spec)) return spec;

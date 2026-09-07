@@ -2,12 +2,16 @@
 /**
  * mcp-api-gen
  *
- * 基于 MCP 的 API 生成服务，
- * 用于将 OpenAPI / Swagger 文档生成前端 TypeScript 接口代码。
+ * 将 OpenAPI / Swagger 文档生成前端 TypeScript 接口代码。
+ *
+ * 运行方式：
+ * - 不带任何参数：以 MCP Server（stdio）运行，供 MCP 客户端（Cursor / Trae 等）调用；
+ * - 携带参数：以 CLI 模式运行，执行一次生成后退出（mcp-api-gen --help 查看用法）。
  */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { registerCreateApi } from "@/tool";
+import { runCli } from "@/cli";
 
 export * from "@/tool";
 
@@ -23,6 +27,13 @@ function createServer() {
 }
 
 async function main() {
+  // 携带任意参数（含 --help / --version）时进入 CLI 模式
+  if (process.argv.length > 2) {
+    await runCli();
+    return;
+  }
+
+  // 无参数：MCP Server 模式（与旧版本行为一致）
   const server = createServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);

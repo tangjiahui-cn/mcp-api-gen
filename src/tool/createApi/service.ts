@@ -124,6 +124,34 @@ ${outputPath}
 }
 
 /**
+ * createApi 生成结果数据（MCP / CLI 共用）
+ */
+export type CreateApiDone = {
+  /** 生成文件绝对路径 */
+  outputPath: string;
+  /** 接口总数 */
+  totalCount: number;
+  /** 是否存在中文 schema */
+  isHasChineseSchemas?: boolean;
+};
+
+/**
+ * 格式化终端完成文本（CLI 模式打印）
+ */
+export function formatApiDoneText(done: CreateApiDone): string {
+  const { outputPath, totalCount, isHasChineseSchemas } = done;
+
+  return [
+    "执行成功。",
+    `生成文件位置：\n${outputPath}`,
+    `接口统计：\n- 总计生成 API 数量：${totalCount}`,
+    isHasChineseSchemas && "存在中文 schema，已自动转为内联类型模式。",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+/**
  * 创建 TypeScript 类型的 API 渲染器
  * @param example 用户提供的 api 示例
  * @param inline api 实例类型是否内联
@@ -196,10 +224,12 @@ export function resolveSchemas(spec: OpenAPISpec): Schemas {
 const DEFAULT_INLINE = false; // 类型是否内联
 
 /**
- * createApi 流程编排
+ * createApi 生成核心（MCP / CLI 共用）
  * @description 支持通过用户提供示例（example）生成 api 文件
  **/
-export async function createApiService(input: CreateApiInput) {
+export async function runCreateApi(
+  input: CreateApiInput,
+): Promise<CreateApiDone> {
   // 确保 Node.js 版本在 20 及以上
   checkNodeVersion(20);
 
@@ -207,7 +237,7 @@ export async function createApiService(input: CreateApiInput) {
   const normalized = normalizeCreateApiInput(input);
   const { projectRoot, output, openapiUrl, example } = normalized;
 
-  // 拉取 OpenAPI
+  // 拉取 OpenAPI（http(s) 地址或本地 JSON 文件）
   const spec = await fetchOpenAPIJson(openapiUrl);
   const schemas = resolveSchemas(spec);
   const isHasChineseSchemas = isHasChineseSchema(schemas);
@@ -239,12 +269,25 @@ export async function createApiService(input: CreateApiInput) {
     }),
   });
 
-  // MCP 返回
-  return formatMcpResult({
+  return {
     outputPath,
+    totalCount: apiResult.stats.totalCount,
+    isHasChineseSchemas,
+  };
+}
+
+/**
+ * createApi MCP 工具服务（MCP 模式返回）
+ * @description 支持通过用户提供示例（example）生成 api 文件
+ **/
+export async function createApiService(input: CreateApiInput) {
+  const done = await runCreateApi(input);
+
+  return formatMcpResult({
+    outputPath: done.outputPath,
     stats: {
-      ...apiResult.stats,
-      isHasChineseSchemas,
+      totalCount: done.totalCount,
+      isHasChineseSchemas: done.isHasChineseSchemas,
     },
   });
 }

@@ -1,37 +1,39 @@
 # mcp-api-gen
 
+**English** | [简体中文](./README.zh-CN.md)
+
 ![npm](https://img.shields.io/npm/v/mcp-api-gen)
 ![license](https://img.shields.io/npm/l/mcp-api-gen)
 ![node](https://img.shields.io/badge/node-%3E%3D20.0.0-green)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue)
 ![MCP](https://img.shields.io/badge/MCP-1.29.0-purple)
 
-OpenAPI 接口生成工具，支持在 AI 编辑器中生成前端 API 。
+An OpenAPI API generation tool that generates frontend API code inside AI editors.
 
-- 🌐 支持内网 OpenAPI 2 / 3 文档解析
-- ⚡ 1000+ 接口约 1 分钟完成
-- 🧩 用户提供示例（基于模板批量生成）
-- 🤖 AI 调用本地生成（结果稳定）
+- 🌐 Parse intranet OpenAPI 2 / 3 documents
+- ⚡ 1000+ endpoints in about a minute
+- 🧩 Bring your own examples (bulk generation driven by a template)
+- 🤖 Generated locally via AI tool calls (deterministic results)
 
-## 功能演示
+## Demo
 
-默认模板生成（axios）：
+Generated with the default template (axios):
 
-<img src="https://cdn.jsdelivr.net/gh/tangjiahui-cn/assets@master/mcp-api-gen/one-sentence-generation-v2.gif" style="max-width: 100%;max-height: 500px;" alt="默认模板生成 API"/>
+<img src="https://cdn.jsdelivr.net/gh/tangjiahui-cn/assets@master/mcp-api-gen/one-sentence-generation-v2.gif" style="max-width: 100%;max-height: 500px;" alt="Generate APIs with the default template"/>
 
-用户提供 API 示例生成：
+Generated with a user-provided API example:
 
-<img src="https://cdn.jsdelivr.net/gh/tangjiahui-cn/assets@master/mcp-api-gen/user-example-generation-v2.gif" style="max-width: 100%;max-height: 500px;" alt="用户提供 API 示例生成"/>
+<img src="https://cdn.jsdelivr.net/gh/tangjiahui-cn/assets@master/mcp-api-gen/user-example-generation-v2.gif" style="max-width: 100%;max-height: 500px;" alt="Generate APIs with a user-provided example"/>
 
-## 快速开始
+## Quick Start
 
-请确保已安装 Node.js（>= 20）。
+Make sure Node.js (>= 20) is installed.
 
-> 暂不支持中文 schema！（极少数情况下后端文档设置 @ApiModel({description: '模型名称'}) ）
+> Chinese schema names are not supported yet (except for the rare case where the backend document sets `@ApiModel({description: '模型名称'})`).
 
-### 1、配置 MCP：
+### 1. Configure MCP
 
-在你的 AI 编辑器（如 Cursor / Trae）中添加 MCP 配置：
+Add the MCP config to your AI editor (e.g. Cursor / Trae):
 
 ```json
 {
@@ -44,151 +46,159 @@ OpenAPI 接口生成工具，支持在 AI 编辑器中生成前端 API 。
 }
 ```
 
-### 2、一句话生成
+### 2. One-sentence generation
 
-在 AI 编辑器中输入提问：
+Type the request in your AI editor:
 
-#### 默认输出（生成到 `./api.ts`）
+#### Default output (generated to `./api.ts`)
 
 ```text
-使用MCP根据 http://localhost:3000/api-docs.json 生成前端API文件，不要自行生成代码
+Use MCP to generate the frontend API file from http://localhost:3000/api-docs.json. Do not generate the code yourself.
 ```
 
-#### 指定输出位置
+#### Specify the output location
 
 ```text
-使用MCP根据 http://localhost:3000/api-docs.json 生成前端API文件到 ./service/api.ts，不要自行生成代码
+Use MCP to generate the frontend API file from http://localhost:3000/api-docs.json into ./service/api.ts. Do not generate the code yourself.
 ```
 
-> 说明：http://localhost:3000/api-docs.json 地址需本地运行此项目的 [playground 文档服务](./playground/README.md)。
+> Note: http://localhost:3000/api-docs.json requires running this project's [playground doc server](./playground/README.md) locally.
 
-### 3、自定义生成风格（提供 API 示例）
+### 3. Customize the generation style (provide an API example)
 
-在 AI 编辑器中输入提问：
+Type the request in your AI editor:
 
 ```text
-使用 MCP 根据 http://localhost:3000/api-docs.json 生成 API，不要自行生成代码。
+Use MCP to generate APIs from http://localhost:3000/api-docs.json. Do not generate the code yourself.
 
-参考示例：
+Reference example:
 import request from 'axios';
 
-// API 前缀
+// API prefix
 const prefix = '/user'
 
 /**
- * 根据ID获取用户
+ * Get a user by ID
  */
 export function getUserById(params: { id: number }): Promise<UserDetail> {
   return request.get(`${prefix}/user/${params.id}`, { params })
 }
 ```
 
-## CLI 用法
+## CLI Usage
 
-除 MCP 调用外，`mcp-api-gen` 也支持直接以 CLI 方式生成：
+Besides calling it via MCP, `mcp-api-gen` can also generate directly from the command line:
 
 ```bash
-# 默认输出 ./api.ts
+# Default output: ./api.ts
 mcp-api-gen --openapiUrl http://localhost:3000/api-docs.json --projectRoot .
 
-# 指定输出路径与 API 风格示例
+# Specify the output path and an API style example
 mcp-api-gen --openapiUrl http://localhost:3000/api-docs.json \
   --projectRoot . --output src/service/api.ts \
   --example 'export function getUserById(params: { id: number }) { return request.get(`/api/user/${params.id}`, { params }) }'
 
-# 使用本地 OpenAPI JSON 文件
+# Use a local OpenAPI JSON file
 mcp-api-gen --openapiUrl ./api-docs.json --projectRoot .
 ```
 
-选项与 MCP 工具参数一致：
+Options match the MCP tool parameters:
 
-| 选项 | 说明 | 默认值 |
+| Option | Description | Default |
 | --- | --- | --- |
-| `--openapiUrl` / `--openapi-url` | Swagger/OpenAPI 文档地址，或本地 JSON 文件（`file://` / 相对、绝对路径，非 `http(s)://` 开头即按本地文件读取） | 环境变量 `OPENAPI_URL` |
-| `--projectRoot` / `--project-root` | 项目根目录（必填） | - |
-| `--output` | 生成文件路径 | `./api.ts` |
-| `--example` | API 函数示例（原始文本） | - |
+| `--openapiUrl` / `--openapi-url` | Swagger/OpenAPI document URL, or a local JSON file (`file://` / relative / absolute path — anything not starting with `http(s)://` is read as a local file) | env var `OPENAPI_URL` |
+| `--projectRoot` / `--project-root` | Project root directory (required) | - |
+| `--output` | Generated file path | `./api.ts` |
+| `--example` | API function example (raw text) | - |
 
-> 不带任何参数运行 `mcp-api-gen` 时进入 MCP Server 模式，供 MCP 客户端调用；更多选项见 `mcp-api-gen --help`。
+> Running `mcp-api-gen` without any arguments starts the MCP Server mode for MCP clients; run `mcp-api-gen --help` for more options.
 
-## 为什么做 mcp-api-gen？
+## Skill Usage
 
-当我尝试使用 AI 编辑器来生成 api 文件时，遇到过这几个问题:
+Besides MCP / CLI, the repository ships a `skills/create-api` skill in its root directory, so agents that support Agent Skills (Claude Code, Cursor, Trae, etc.) can consume this project as **Skill + CLI** without configuring MCP:
 
-- ❌ 内网 OpenAPI 文档无法读取
-- ❌ 大量接口生成结果不稳定（上下文截断、格式可能变）
-- ❌ Token 消耗高、生成耗时长
-- ❌ 不同项目请求风格不一致
+```bash
+npx skills add tangjiahui-cn/mcp-api-gen --skill create-api
+```
 
-我依次尝试了这几类方法：
+## Why mcp-api-gen?
 
-- V0：AI 编辑器直接读取 OpenAPI 地址（初次尝试 AI 接入开发流）
-- V1：MCP 读取内网接口提供给 AI 编辑器（解决内网解析问题）
-- V2：MCP 分段读取内网接口提供给 AI（解决大量接口上下文截断问题）
-- V3：让 AI 提供 API 实例和字段映射，而不是直接生成（解决了生成不稳定问题）
-- 当前：MCP 本地 AST 解析批量生成（解决上述问题。且生成极快、Token 消耗极低、结果稳定）
+When I tried using AI editors to generate API files, I ran into these problems:
 
-最终实现了核心目标：
+- ❌ Intranet OpenAPI documents could not be read
+- ❌ Unstable output for a large number of endpoints (context truncation, possible format drift)
+- ❌ High token consumption and slow generation
+- ❌ Inconsistent request styles across projects
 
-- **简单**。用户提供示例，一句话提问即可生成 API 文件
-- **快速**。本地运行生成，1000+ 接口只需 1s 完成
-- **稳定**。运行时模板驱动生成，相同结果相同输出
+Here is the path I took:
 
-`mcp-api-gen` 的核心思路不是 `AI生成代码`，而是 `AI 调用工具`。因此解决了 AI 生成结果不稳定的问题。
+- V0: The AI editor read the OpenAPI URL directly (first attempt at bringing AI into the dev flow)
+- V1: MCP reads intranet endpoints and exposes them to the AI editor (solves intranet parsing)
+- V2: MCP reads intranet endpoints in chunks and feeds them to the AI (solves context truncation for many endpoints)
+- V3: Let the AI provide API examples and field mappings instead of generating directly (solves unstable generation)
+- Current: MCP generates in bulk via local AST parsing (solves all of the above — blazing fast, minimal tokens, stable results)
 
-## 功能特性
+The core goals:
 
-- ✅ 内网文档解析
-- ✅ 基于示例解析 + 模板渲染
-- ✅ AI 编辑器直接生成 API 文件（Cursor / Trae）
-- ✅ 支持用户提供请求示例
-- ✅ 生成完整 TypeScript 类型
-- ✅ 支持 OpenAPI 2 / 3
-- ✅ Token 消耗极低
-- ✅ 大量接口生成极快（1000+ 接口约 1 秒）
+- **Simple**. Provide an example and ask in one sentence to generate the API file
+- **Fast**. Generation runs locally; 1000+ endpoints take about 1 second
+- **Stable**. Template-driven generation at runtime — same input, same output
 
-## 请求方式说明
+The core idea of `mcp-api-gen` is not `AI writing code`, but `AI calling a tool`. That is what makes the output stable.
 
-默认按 axios 风格生成，生成结果由示例代码决定，不做额外结构转换。
+## Features
+
+- ✅ Intranet document parsing
+- ✅ Example-based parsing + template rendering
+- ✅ Generate API files directly in AI editors (Cursor / Trae)
+- ✅ User-provided request examples
+- ✅ Full TypeScript type generation
+- ✅ OpenAPI 2 / 3 support
+- ✅ Minimal token consumption
+- ✅ Extremely fast with many endpoints (1000+ endpoints in about 1 second)
+
+## Request style
+
+Code is generated in axios style by default; the result is decided by the example code, with no extra structural conversion.
 
 ```ts
 request.get(url, { params });
 request.post(url, { data });
 ```
 
-## 本地开发
+## Local development
 
-### 1、启动项目
+### 1. Start the project
 
-要求 Node.js 版本 >= 20。
+Requires Node.js >= 20.
 
 ```bash
-# 安装依赖
+# Install dependencies
 pnpm i
 
-# 构建（开发模式）
+# Build (development mode)
 pnpm dev
 
-# Tool 测试
+# Test the tool
 pnpm debug
 
-# MCP 调试
+# Debug the MCP server
 pnpm debug:mcp
 ```
 
-### 2、运行文档示例
+### 2. Run the playground doc server
 
-启动 playground 文档服务，确认以下地址可访问：
+Start the playground doc server and make sure this URL is reachable:
 
 ```text
 http://localhost:3000/api-docs.json
 ```
 
 ```shell
-# 启动文档
+# Start the doc server
 pnpm docs:playground
 ```
 
-## 基准测试
+## Benchmarks
 
-见 [./playground/README.md#基准测试](./playground/README.md#基准测试)。
+See [./playground/README.md](./playground/README.md) (benchmark section).
